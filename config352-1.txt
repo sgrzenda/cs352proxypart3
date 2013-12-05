@@ -1,0 +1,7 @@
+listenPort 50000 
+linkPeriod 10
+linkTimeout 15
+quitAfter 34
+tapDevice tap7
+globalSecretKey Secret
+peerKey AA:AA:AA:AA:AA:AA PKey

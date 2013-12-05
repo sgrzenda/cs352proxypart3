@@ -1,0 +1,10 @@
+listenPort 123243
+linkPeriod 54
+linkTimeout 900
+peer cs352-24.cs.rutgers.edu 44949
+peer cs352-23.cs.rutgers.edu 83748
+peer cs352-22.cs.rutgers.edu 23471
+quitAfter 34
+tapDevice tap1
+globalSecretKey Secret
+peerKey AA:AA:AA:AA:AA:AA PKey

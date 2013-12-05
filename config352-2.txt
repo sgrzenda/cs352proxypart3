@@ -1,0 +1,8 @@
+listenPort 40000 
+linkPeriod 10
+linkTimeout 15
+peer cs352-24.cs.rutgers.edu 50000 
+quitAfter 34
+tapDevice tap9
+globalSecretKey Secret
+peerKey AA:AA:AA:AA:AA:AA PKey
