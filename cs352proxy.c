@@ -210,6 +210,17 @@ void add_member_connect(linkstate_node* recv_node, int gateway_sockID) {
     
     if (pkt_sockfd == NULL) {
         printf("Their Macaddr wasn't there\n");
+        printf("The recieved remote macaddr is: \n");
+        int j;
+        for (j = 0; j < 6; j++) {
+            printf("%x:",recv_node->remote.macaddr[j]);
+        }
+        printf("\n");
+        printf("My macaddr is: \n");
+        for (j = 0; j < 6; j++) {
+            printf("%x:",my_proxy_info->macaddr[j]);
+        }
+        printf("\n");
         if (comp_mac_addrs(recv_node->remote.macaddr, my_proxy_info->macaddr) == 0) {
             printf("But it was me\n");
             pthread_mutex_unlock(&deleterlock);
