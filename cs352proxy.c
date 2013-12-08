@@ -27,7 +27,6 @@ proxy_info* my_proxy_info;
 int tap_fd, linkPeriod, linkTimeout, localPort;
 membership_list * mem_list;
 void* TCPHandle(void *fd);
-void add_member_connect2(linkstate_node* recv_node);
 forwardingTable * fTable;
 pthread_mutex_t deleterlock;
 
@@ -130,18 +129,6 @@ struct proxy_socketfd* find_socketfd(char *macaddr) {
     return s;
 }
 
-/**
- * add_members adds to the membership and connects to host if 
- * its not in the list
- */
-void add_members(linkstate_node* list) {
-    linkstate_node * ptr = list;
-    printf("Got to add_members\n");
-    while (ptr != NULL) {
-        add_member_connect(ptr);
-        ptr = ptr->next;
-    }
-}
 
 /**
  * in_member_list gives a reference to a linkstate if it exists in the membership
@@ -160,63 +147,6 @@ linkstate_node* in_member_list(proxy_info* local_recv, proxy_info* remote_recv){
     return NULL;
 }
 
-/**
- * add_member_connect is called by add_members and connects to members that 
- * aren't in the membership list
- */
-void add_member_connect(linkstate_node* recv_node) {
-    pthread_mutex_lock(&deleterlock);
-    printf("Got to add_member_connect part2\n");
-    struct proxy_socketfd* pkt_sockfd = find_socketfd(recv_node->local.macaddr);
-    
-    if (pkt_sockfd == NULL) {
-        printf("Their Macaddr wasn't there\n");
-        uint32_t ip = recv_node->remote.ip;
-        uint16_t portno = recv_node->remote.portno;
-        int sock_fd = connecttohost32(portno,ip);
-        
-        if (sock_fd < 0) {
-            perror("Could not connect to host.");
-            pthread_mutex_unlock(&deleterlock);
-            return;
-        }
-        
-        addsockfd(recv_node->local.macaddr,sock_fd);
-        pthread_t startListen;
-        struct proxy_socketfd* sfd = find_socketfd(recv_node->remote.macaddr);
-        pthread_create(&startListen, NULL, TCPHandle, &sfd->sock_fd);
-
-        recv_node->remote = recv_node->local;
-        recv_node->local = *my_proxy_info;
-        
-        linkstate_node* temp = mem_list->head;
-        linkstate_node* ptr = recv_node;
-        
-        ptr->next = temp;
-        mem_list->head = ptr;
-        mem_list->head->ID = gettimeid();
-        mem_list->size++;
-        pthread_mutex_unlock(&deleterlock);
-        return;
-
-    } else {
-        printf("Mac was there\n");
-        linkstate_node * finder = in_member_list(&(recv_node->local), &(recv_node->remote));
-        int compVal = comp_mac_addrs(recv_node->remote.macaddr, my_proxy_info->macaddr);
-        if (finder && compVal == 0) {
-            printf("Member in list\n");
-            //if (recv_node->ID > finder->ID) {
-            finder->ID = gettimeid();
-            printf("Updated time\n");
-        }
-        pthread_mutex_unlock(&deleterlock);
-        return;
-        
-    }
-    
-    pthread_mutex_unlock(&deleterlock);
-    return;
-}
 
 /** 
  * delete_members deletes a member form the membership list if the 
@@ -348,75 +278,6 @@ void * checkLinkTimeOut () {
         printf("Searching for expired members\n");
         removeExpiredMembers(linkTimeout);
     }
-}
-
-/*
- *connecttohost32 - this is called by the add_members. This connects
- *the client to servers from a recieved linkstate packet
- *
- */
-
-int connecttohost32(uint16_t remote_port, uint32_t ipaddr) {
-    int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (socket_fd < 0) {
-        perror("Socket failed");
-        return -1;
-    }
-
-    struct sockaddr_in serv_addr;
-
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(remote_port);
-    serv_addr.sin_addr.s_addr = ipaddr;
-
-    if (connect(socket_fd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
-        perror("connect");
-        return -1;
-    }
-
-    // TODO ClientPath - Add the host to the membership list
-    
-    uint64_t timeID = gettimeid();
-
-    proxy_info * remoteInfo = malloc(sizeof(proxy_info));
-    remoteInfo->ip = serv_addr.sin_addr.s_addr;
-    remoteInfo->portno = remote_port;
-
-    linkstate_node* client_node = malloc(sizeof(linkstate_node));
-
-    client_node->local = *my_proxy_info;
-    client_node->remote = *remoteInfo;
-    client_node->linkweight = 1;
-    client_node->ID = timeID;
-    client_node->next = NULL;
-
-    pkt_header* head = malloc(sizeof(pkt_header));
-    head->type = PKT_LINKSTATE;
-    head->length = 50;
-
-    char buf[54];
-
-    linkstate_pkt* lspkt = malloc(sizeof(linkstate_pkt));
-
-    lspkt->head = *head;
-    lspkt->numNeighbors = 1;
-    lspkt->source = *my_proxy_info;
-    lspkt->list = client_node;
-
-    //TODO send packet the right way
-    htonLinkstate(lspkt,(char*)&buf);
-
-    printf("\n\n\nSending from connecttohost32\n\n\n");
-    
-    send(socket_fd,buf,54,0);
-
-    //shutdown(socket_fd,1);
-
-    free(client_node);
-    free(head);
-    free(lspkt);
-    
-    return socket_fd;
 }
 
 /*
@@ -695,7 +556,6 @@ void *TCPHandle (void* fd) {
                     
                     printf("\n\n\nAttempting to add recieved list to my list\n\n\n");
                     
-                    add_members(pkt->list);
                 }
                 
                 
@@ -778,7 +638,6 @@ void *TCPHandle (void* fd) {
                 continue;
             } else {
             
-                add_members(pkt->list);
                 printf("Received auto link state pkt\n");
                 
             }
@@ -950,7 +809,7 @@ int main(int argc, char *argv[]) {
             curr = curr->next;
             continue;
         }
-
+        
         pthread_t listen_thread;
         pthread_create(&listen_thread,NULL,TCPHandle,&socket_fd);
 	    curr = curr->next;
