@@ -153,7 +153,7 @@ int get_lowest_saved_distance(uint8_t* mac) {
     linkstate_node * local_list_ptr = mem_list->head;
     int dist = -1;
     while (local_list_ptr != NULL) {
-        if (comp_mac_addr(local_list_ptr->remote.macaddr, mac) == 0) {
+        if (comp_mac_addrs(local_list_ptr->remote.macaddr, mac) == 0) {
             if (dist > local_list_ptr->linkweight) {
                 dist = local_list_ptr->linkweight;
             }
