@@ -10,7 +10,7 @@
 #include <sys/stat.h>
 #include <net/if.h>
 #include <arpa/inet.h>
-#include <linux/if_tun.h>
+//#include <linux/if_tun.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
@@ -92,6 +92,8 @@ void deletesockfd(char *macaddr) {
     free(s);
 }
 
+
+
 /**
  * find_socketfd is used to look up a socket from a MAC
  * address in the forwarding table
@@ -147,6 +149,17 @@ linkstate_node* in_member_list(proxy_info* local_recv, proxy_info* remote_recv){
     return NULL;
 }
 
+int get_saved_distance(uint8_t* mac) {
+    linkstate_node * local_list_ptr = mem_list->head;
+    
+    while (local_list_ptr != NULL) {
+        if (comp_mac_addr(local_list_ptr->remote.macaddr, mac) == 0) {
+            return local_list_ptr->linkweight;
+        }
+    }
+    return -1;
+}
+
 
 /** 
  * delete_members deletes a member form the membership list if the 
@@ -176,6 +189,85 @@ void delete_members(linkstate_node* link){
             curr = curr->next;
         }
     }
+}
+
+void add_members(linkstate_node* list, int gateway_sockID) {
+    linkstate_node * ptr = list;
+    printf("Got to add_members\n");
+    while (ptr != NULL) {
+        add_member_connect(ptr, gateway_sockID);
+        ptr = ptr->next;
+    }
+}
+
+void add_member_connect(linkstate_node* recv_node, int gateway_sockID) {
+    pthread_mutex_lock(&deleterlock);
+    printf("Got to add_member_connect part2\n");
+    struct proxy_socketfd* pkt_sockfd = find_socketfd(recv_node->local.macaddr);
+    
+    if (pkt_sockfd == NULL) {
+        printf("Their Macaddr wasn't there\n");
+        uint32_t ip = recv_node->remote.ip;
+        uint16_t portno = recv_node->remote.portno;
+        
+        addsockfd(recv_node->local.macaddr, gateway_sockID);
+        
+        recv_node->remote = recv_node->local;
+        recv_node->local = *my_proxy_info;
+        
+        linkstate_node* temp = mem_list->head;
+        linkstate_node* ptr = recv_node;
+        
+        ptr->next = temp;
+        ptr->linkweight++;
+        mem_list->head = ptr;
+        mem_list->head->ID = gettimeid();
+        mem_list->size++;
+        pthread_mutex_unlock(&deleterlock);
+        return;
+        
+    } else {
+        printf("Mac was there\n");
+        
+        linkstate_node * finder = in_member_list(&(recv_node->local), &(recv_node->remote));
+        int compVal = comp_mac_addrs(recv_node->remote.macaddr, my_proxy_info->macaddr);
+        if (finder && compVal == 0) {
+            printf("Member in list\n");
+            //if (recv_node->ID > finder->ID) {
+            finder->ID = gettimeid();
+            printf("Updated time\n");
+            pthread_mutex_unlock(&deleterlock);
+            return;
+        } else {
+            if (finder == NULL) {
+                recv_node->remote = recv_node->local;
+                recv_node->local = *my_proxy_info;
+                
+                linkstate_node* temp = mem_list->head;
+                linkstate_node* ptr = recv_node;
+                
+                ptr->next = temp;
+                if (compVal != 0) {
+                    ptr->linkweight++;
+                }
+                mem_list->head = ptr;
+                mem_list->head->ID = gettimeid();
+                mem_list->size++;
+                
+                if (ptr->linkweight < finder->linkweight) {
+                    pkt_sockfd->sock_fd = gateway_sockID;
+                }
+
+            }
+        }
+        
+        pthread_mutex_unlock(&deleterlock);
+        return;
+        
+    }
+    
+    pthread_mutex_unlock(&deleterlock);
+    return;
 }
 
 /** 
@@ -555,6 +647,8 @@ void *TCPHandle (void* fd) {
                     pthread_mutex_unlock(&deleterlock);
                     
                     printf("\n\n\nAttempting to add recieved list to my list\n\n\n");
+                    
+                    add_members(pkt->list, tcp_fd);
                     
                 }
                 
