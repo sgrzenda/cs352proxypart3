@@ -679,6 +679,8 @@ void *TCPHandle (void* fd) {
                     
                     add_members(pkt->list, tcp_fd);
                     
+                    printf("\n\n\nGot out of add_members\n\n\n");
+                    
                 }
                 
                 
