@@ -222,7 +222,7 @@ void add_member_connect(linkstate_node* recv_node, int gateway_sockID) {
             printf("%x:",my_proxy_info->macaddr[j]);
         }
         printf("\n");
-        if (comp_mac_zero(recv_node->remote.macaddr) != 0) {
+        if ((comp_mac_zero(recv_node->remote.macaddr) != 0) || (comp_mac_addrs(recv_node->remote.macaddr, my_proxy_info->macaddr)) == 0) {
             printf("But it was me\n");
             pthread_mutex_unlock(&deleterlock);
             return;
@@ -661,27 +661,6 @@ void *TCPHandle (void* fd) {
                     ptr->next = temp;
                     mem_list->head = ptr;
                     mem_list->size++;
-                    
-                    printf("The recieved remote macaddr is: \n");
-                    
-                    
-                    temp = mem_list->head;
-                    while (temp != NULL) {
-                        int j;
-                        for (j = 0; j < 6; j++) {
-                            printf("%x:",temp->remote.macaddr[j]);
-                        }
-                        if (comp_mac_zero(temp->remote.macaddr) == 0) {
-                            printf("Get into remote macaddr changing\n");
-                            temp->remote.macaddr[0] = pkt->source.macaddr[0];
-                            temp->remote.macaddr[1] = pkt->source.macaddr[1];
-                            temp->remote.macaddr[2] = pkt->source.macaddr[2];
-                            temp->remote.macaddr[3] = pkt->source.macaddr[3];
-                            temp->remote.macaddr[4] = pkt->source.macaddr[4];
-                            temp->remote.macaddr[5] = pkt->source.macaddr[5];
-                        }
-                        temp = temp->next;
-                    }
                     
                     pthread_mutex_unlock(&deleterlock);
                     
