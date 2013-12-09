@@ -158,6 +158,7 @@ int get_lowest_saved_distance(uint8_t* mac) {
                 dist = local_list_ptr->linkweight;
             }
         }
+        local_list_ptr = local_list_ptr->next;
     }
     return dist;
 }
