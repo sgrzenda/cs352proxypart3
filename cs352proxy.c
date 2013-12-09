@@ -224,6 +224,12 @@ void add_member_connect(linkstate_node* recv_node, int gateway_sockID) {
         printf("\n");
         if ((comp_mac_zero(recv_node->remote.macaddr) != 0) || (comp_mac_addrs(recv_node->remote.macaddr, my_proxy_info->macaddr)) == 0) {
             printf("But it was me\n");
+            linkstate_node * finder = in_member_list(&(recv_node->local), &(recv_node->remote));
+            if (finder != NULL) {
+                printf("Member in list\n");
+                finder->ID = gettimeid();
+                printf("Updated time\n");
+            }
             pthread_mutex_unlock(&deleterlock);
             return;
         }
@@ -753,6 +759,7 @@ void *TCPHandle (void* fd) {
             } else {
             
                 printf("Received auto link state pkt\n");
+                add_members(pkt->list, tcp_fd);
                 continue;
                 
             }
