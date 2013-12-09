@@ -227,7 +227,7 @@ void add_member_connect(linkstate_node* recv_node, int gateway_sockID) {
             pthread_mutex_unlock(&deleterlock);
             return;
         }
-        
+        printf("Got past comp_macs\n");
         addsockfd(recv_node->remote.macaddr, gateway_sockID);
         
         linkstate_node* temp = mem_list->head;
