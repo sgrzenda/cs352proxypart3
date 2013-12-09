@@ -229,7 +229,8 @@ void add_member_connect(linkstate_node* recv_node, int gateway_sockID) {
         }
         printf("Got past comp_macs\n");
         addsockfd(recv_node->remote.macaddr, gateway_sockID);
-        
+        printf("Got past addsock\n");
+
         linkstate_node* temp = mem_list->head;
         linkstate_node* ptr = recv_node;
         
