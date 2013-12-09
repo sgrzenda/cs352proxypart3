@@ -665,6 +665,7 @@ void *TCPHandle (void* fd) {
                     temp = mem_list->head;
                     while (temp != NULL) {
                         if (comp_mac_zero(temp->remote.macaddr) == 0) {
+                            printf("Get into remote macaddr changing\n");
                             temp->remote.macaddr[0] = pkt->source.macaddr[0];
                             temp->remote.macaddr[1] = pkt->source.macaddr[1];
                             temp->remote.macaddr[2] = pkt->source.macaddr[2];
