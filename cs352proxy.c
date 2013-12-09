@@ -255,6 +255,7 @@ void add_member_connect(linkstate_node* recv_node, int gateway_sockID) {
         linkstate_node * finder = in_member_list(&(recv_node->local), &(recv_node->remote));
         int compVal = comp_mac_addrs(recv_node->remote.macaddr, my_proxy_info->macaddr);
         
+        /*
         if (finder != NULL && compVal == 0) {
             printf("Member in list\n");
             //if (recv_node->ID > finder->ID) {
@@ -262,34 +263,32 @@ void add_member_connect(linkstate_node* recv_node, int gateway_sockID) {
             printf("Updated time\n");
             pthread_mutex_unlock(&deleterlock);
             return;
+         
             
-        } else {
-            if (finder == NULL) {
-                int dist = get_lowest_saved_distance(recv_node->local.macaddr);
-                int saveDist = get_lowest_saved_distance(recv_node->remote.macaddr);
-                linkstate_node* temp = mem_list->head;
-                linkstate_node* ptr = recv_node;
+        } else {*/
+        if (finder == NULL) {
+            int dist = get_lowest_saved_distance(recv_node->local.macaddr);
+            int saveDist = get_lowest_saved_distance(recv_node->remote.macaddr);
+            linkstate_node* temp = mem_list->head;
+            linkstate_node* ptr = recv_node;
                 
-                ptr->next = temp;
-                ptr->linkweight = ptr->linkweight + dist;
-                mem_list->head = ptr;
-                mem_list->head->ID = gettimeid();
-                mem_list->size++;
+            ptr->next = temp;
+            ptr->linkweight = ptr->linkweight + dist;
+            mem_list->head = ptr;
+            mem_list->head->ID = gettimeid();
+            mem_list->size++;
 
-                if (ptr->linkweight < saveDist) {
-                    pkt_sockfd->sock_fd = gateway_sockID;
-                }
-            } else {
+            if (ptr->linkweight < saveDist) {
+                pkt_sockfd->sock_fd = gateway_sockID;
                 pthread_mutex_unlock(&deleterlock);
                 return;
             }
+        } else {
+            pthread_mutex_unlock(&deleterlock);
+            return;
         }
-        
-        pthread_mutex_unlock(&deleterlock);
-        return;
-        
     }
-    
+        
     pthread_mutex_unlock(&deleterlock);
     return;
 }
