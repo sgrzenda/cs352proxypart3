@@ -943,12 +943,12 @@ int main(int argc, char *argv[]) {
 
     pthread_create(&TAPthread,NULL,TAPHandle,NULL);
     pthread_create(&sendThread, NULL, sendPackets, NULL);
-    //pthread_create(&timeoutThread, NULL, checkLinkTimeOut, NULL);
+    pthread_create(&timeoutThread, NULL, checkLinkTimeOut, NULL);
 
     pthread_join(TAPthread, NULL);
     pthread_join(acceptconnthread, NULL);
     pthread_join(sendThread, NULL);
-    //pthread_join(timeoutThread, NULL);
+    pthread_join(timeoutThread, NULL);
 
     return 0;
 }
