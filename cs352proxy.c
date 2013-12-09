@@ -239,6 +239,7 @@ void add_member_connect(linkstate_node* recv_node, int gateway_sockID) {
         mem_list->head->ID = gettimeid();
         mem_list->size++;
         pthread_mutex_unlock(&deleterlock);
+        printf("Got past unlock\n");
         return;
         
     } else {
