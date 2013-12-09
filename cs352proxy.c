@@ -670,7 +670,7 @@ void *TCPHandle (void* fd) {
                             temp->remote.macaddr[5] = pkt->source.macaddr[5];
                         }
                     }
-                    
+                    temp= temp->next;
                     pthread_mutex_unlock(&deleterlock);
                     
                     printf("\n\n\nAttempting to add recieved list to my list\n\n\n");
