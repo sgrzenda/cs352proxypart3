@@ -45,7 +45,7 @@ struct proxy_socketfd *socketfds = NULL;
  */
 void addsockfd(char *new_macaddr, int fd) {
 
-    pthread_mutex_lock(&deleterlock);
+    //pthread_mutex_lock(&deleterlock);
     struct proxy_socketfd *s;
     
     s = malloc(sizeof(struct proxy_socketfd));
@@ -59,7 +59,7 @@ void addsockfd(char *new_macaddr, int fd) {
     s->sock_fd = fd;
     //printf("adding %s\n", s->macaddr);
     HASH_ADD_STR(socketfds,macaddr,s);
-    pthread_mutex_unlock(&deleterlock);
+    //pthread_mutex_unlock(&deleterlock);
 }
 
 /**
