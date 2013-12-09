@@ -120,6 +120,7 @@ int comp_mac_addrs(uint8_t* mac1, uint8_t* mac2) {
 int comp_mac_zero(uint8_t* mac1) {
     int i = 0;
     for (i = 0; i < 6; i++) {
+        //printf("Mac at i = %d\n", mac1[i]);
         if (mac1[i] != 0) {
             return 0;
         }

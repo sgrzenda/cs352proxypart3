@@ -222,7 +222,7 @@ void add_member_connect(linkstate_node* recv_node, int gateway_sockID) {
             printf("%x:",my_proxy_info->macaddr[j]);
         }
         printf("\n");
-        if (comp_mac_zero(recv_node->remote.macaddr) == 0) {
+        if (comp_mac_zero(recv_node->remote.macaddr) != 0) {
             printf("But it was me\n");
             pthread_mutex_unlock(&deleterlock);
             return;
